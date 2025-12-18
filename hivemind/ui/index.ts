@@ -17,3 +17,6 @@ export { CursorOverlay } from './components/CursorOverlay';
 export type { RemoteCursor } from './components/CursorOverlay';
 
 export { BudgetMeter } from './components/BudgetMeter';
+
+export { KeyVaultSettings } from './components/KeyVaultSettings';
+export type { ApiKeyEntry } from './components/KeyVaultSettings';
