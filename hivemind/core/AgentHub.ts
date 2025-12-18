@@ -8,7 +8,11 @@ import {
 	ArchitectAgent,
 	DevilsAdvocateAgent,
 	HistorianAgent,
-	ScribeAgent
+	ScribeAgent,
+	DiplomatAgent,
+	DesignerAgent,
+	SecurityGuardAgent,
+	InternAgent
 } from '../agents/Agent';
 import KeyVault from '../core/KeyVault';
 
@@ -38,7 +42,11 @@ export class AgentHub {
 			new ArchitectAgent(),
 			new DevilsAdvocateAgent(),
 			new HistorianAgent(),
-			new ScribeAgent()
+			new ScribeAgent(),
+			new DiplomatAgent(),
+			new DesignerAgent(),
+			new SecurityGuardAgent(),
+			new InternAgent()
 		];
 
 		for (const agent of defaultAgents) {
@@ -126,6 +134,30 @@ export class AgentHub {
 
 	getTasksByAgent(agentId: string): AgentTask[] {
 		return Array.from(this.tasks.values()).filter(t => t.agentId === agentId);
+	}
+
+	async resolveConflict(base: string, ours: string, theirs: string): Promise<string> {
+		const agent = this.getAgentByName('The Diplomat') as any;
+		if (!agent) throw new Error('Diplomat agent not available');
+		return agent.resolveConflict(base, ours, theirs);
+	}
+
+	async previewComponent(componentCode: string): Promise<string> {
+		const agent = this.getAgentByName('The Designer') as any;
+		if (!agent) throw new Error('Designer agent not available');
+		return agent.previewComponent(componentCode);
+	}
+
+	async scanSecurity(code: string): Promise<string> {
+		const agent = this.getAgentByName('The Security Guard') as any;
+		if (!agent) throw new Error('Security Guard agent not available');
+		return agent.scanForVulnerabilities(code);
+	}
+
+	async generateTests(code: string, framework?: string): Promise<string> {
+		const agent = this.getAgentByName('The Intern') as any;
+		if (!agent) throw new Error('Intern agent not available');
+		return agent.generateTests(code, framework);
 	}
 }
 

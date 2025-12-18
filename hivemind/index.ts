@@ -14,7 +14,11 @@ export {
 	ArchitectAgent,
 	DevilsAdvocateAgent,
 	HistorianAgent,
-	ScribeAgent
+	ScribeAgent,
+	DiplomatAgent,
+	DesignerAgent,
+	SecurityGuardAgent,
+	InternAgent
 } from './agents/Agent';
 
 // Sync
