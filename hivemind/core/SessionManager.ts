@@ -126,6 +126,106 @@ export class Session {
 			isActive: this.isActive
 		};
 	}
+
+	// Invite System
+	private inviteTokens: Map<string, { expiresAt: number; usesLeft: number }> = new Map();
+
+	createInviteToken(options?: { expiresIn?: number; maxUses?: number }): string {
+		const token = this.generateInviteToken();
+		this.inviteTokens.set(token, {
+			expiresAt: Date.now() + (options?.expiresIn || 24 * 60 * 60 * 1000), // 24h default
+			usesLeft: options?.maxUses || 10
+		});
+		return token;
+	}
+
+	private generateInviteToken(): string {
+		const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+		let token = '';
+		for (let i = 0; i < 8; i++) {
+			token += chars.charAt(Math.floor(Math.random() * chars.length));
+		}
+		return token;
+	}
+
+	getShareableLink(): string {
+		const token = this.createInviteToken();
+		return `hivemind.io/join/${this.id}?t=${token}`;
+	}
+
+	validateInviteToken(token: string): boolean {
+		const invite = this.inviteTokens.get(token);
+		if (!invite) return false;
+		if (Date.now() > invite.expiresAt) {
+			this.inviteTokens.delete(token);
+			return false;
+		}
+		if (invite.usesLeft <= 0) {
+			this.inviteTokens.delete(token);
+			return false;
+		}
+		invite.usesLeft--;
+		return true;
+	}
+
+	// Voice Chat Integration
+	private voiceEnabled: boolean = false;
+	private voiceParticipants: Set<string> = new Set();
+
+	enableVoiceChat(): void {
+		this.voiceEnabled = true;
+	}
+
+	disableVoiceChat(): void {
+		this.voiceEnabled = false;
+		this.voiceParticipants.clear();
+	}
+
+	isVoiceEnabled(): boolean {
+		return this.voiceEnabled;
+	}
+
+	joinVoice(userId: string): boolean {
+		if (!this.voiceEnabled) return false;
+		if (!this.participants.has(userId)) return false;
+		this.voiceParticipants.add(userId);
+		return true;
+	}
+
+	leaveVoice(userId: string): void {
+		this.voiceParticipants.delete(userId);
+	}
+
+	getVoiceParticipants(): string[] {
+		return Array.from(this.voiceParticipants);
+	}
+
+	// Participant Events
+	private participantJoinHandlers: Set<(p: Participant) => void> = new Set();
+	private participantLeaveHandlers: Set<(id: string) => void> = new Set();
+
+	onParticipantJoin(handler: (p: Participant) => void): () => void {
+		this.participantJoinHandlers.add(handler);
+		return () => this.participantJoinHandlers.delete(handler);
+	}
+
+	onParticipantLeave(handler: (id: string) => void): () => void {
+		this.participantLeaveHandlers.add(handler);
+		return () => this.participantLeaveHandlers.delete(handler);
+	}
+
+	addParticipantWithNotify(participant: Participant): void {
+		participant.color = participant.color || this.generateColor();
+		this.participants.set(participant.id, participant);
+		this.participantJoinHandlers.forEach(h => h(participant));
+	}
+
+	removeParticipantWithNotify(participantId: string): void {
+		this.participants.delete(participantId);
+		this.syncEngine.removeCursor(participantId);
+		this.voiceParticipants.delete(participantId);
+		this.participantLeaveHandlers.forEach(h => h(participantId));
+	}
 }
 
 export class SessionManager {
