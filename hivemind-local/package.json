@@ -1,0 +1,24 @@
+{
+	"name": "hivemind",
+	"version": "0.1.0",
+	"description": "HiveMind - Local-First Multiplayer IDE",
+	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
+	"scripts": {
+		"dev": "concurrently \"npm run server\" \"npm run client\"",
+		"server": "cd packages/server && node index.js",
+		"client": "cd packages/client && vite",
+		"build": "cd packages/client && vite build",
+		"electron": "electron electron/main.js",
+		"electron:dev": "concurrently \"npm run server\" \"npm run client\" \"wait-on http://localhost:5173 && npm run electron\""
+	},
+	"devDependencies": {
+		"concurrently": "^8.2.2",
+		"wait-on": "^7.2.0"
+	},
+	"engines": {
+		"node": ">=18"
+	}
+}
